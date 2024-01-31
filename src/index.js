@@ -3,11 +3,11 @@ const puppeteer = require("puppeteer");
 const cors = require("cors");
 const fs = require("fs");
 require("dotenv").config();
+require("dotenv").config();
+
+const PORT = process.env.PORT || 8080;
 
 const app = express();
-const port = process.env.PORT || 5000;
-
-app.use(express.json());
 app.use(cors());
 
 app.get("/generate-pdf", async (req, res) => {
@@ -41,4 +41,5 @@ app.get("/generate-pdf", async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
-app.listen(port);
+
+app.listen(PORT);
