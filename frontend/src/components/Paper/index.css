@@ -1,0 +1,16 @@
+.verification-form {
+  padding: 20px;
+  min-width: 400px;
+  min-height: 400px;
+  text-align: center;
+  animation: fadeIn 0.8s ease-in-out;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  align-items: center;
+}
+
+.verification-form {
+  position: relative;
+  z-index: 2;
+}
