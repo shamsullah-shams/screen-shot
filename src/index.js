@@ -5,6 +5,7 @@ const Model = require("./model");
 const mongoose = require("mongoose");
 const path = require("path");
 require("dotenv").config();
+const fs = require("fs");
 
 const PORT = process.env.PORT || 8080;
 
@@ -22,7 +23,6 @@ app.use(express.static(path.join(__dirname, "public", "build")));
 
 // root route
 app.use("/", (req, res, next) => {
-  console.log(path.join(__dirname, "public", "build", "index.html"));
   res.sendFile(path.join(__dirname, "public", "build", "index.html"));
 });
 
@@ -51,7 +51,6 @@ app.post("/generate-pdf", async (req, res) => {
       await object.save();
     }
   } catch (error) {
-    console.log(error);
     return res
       .status(500)
       .send({ message: error?.message || "Internal server error" });
@@ -67,6 +66,11 @@ app.post("/generate-pdf", async (req, res) => {
     await page.screenshot({
       path: "screenshot.jpg",
     });
+
+    // delete file
+    setTimeout(() => {
+      fs.unlinkSync("screenshot.jpg");
+    }, 2000);
     // download screen shot
     res.download("screenshot.jpg");
   } else if (type === "pdf") {
@@ -77,6 +81,11 @@ app.post("/generate-pdf", async (req, res) => {
       printBackground: true,
       format: "A3",
     });
+
+    // delete file
+    setTimeout(() => {
+      fs.unlinkSync("result.pdf");
+    }, 2000);
     // download pdf
     res.download("result.pdf");
   }
