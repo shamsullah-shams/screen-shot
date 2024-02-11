@@ -7,24 +7,25 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import InputAdornment from "@mui/material/InputAdornment";
-import IconButton from "@mui/material/IconButton";
-import Visibility from "@mui/icons-material/Visibility";
-import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import CustomAlert from "./components/Alert";
 import LoadingButton from "@mui/lab/LoadingButton";
-import { Link } from "react-router-dom";
 import Paper from "./components/Paper";
 import axios from "axios";
+import Radio from "@mui/material/Radio";
+import RadioGroup from "@mui/material/RadioGroup";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import FormControl from "@mui/material/FormControl";
+import FormLabel from "@mui/material/FormLabel";
 
 const defaultTheme = createTheme();
 
 export default function SignUp() {
   const [showAlert, setShowAlert] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [url, setUrl] = useState("");
+  const [type, setType] = useState("pdf");
   const [alertType, setAlertType] = useState();
-  const [formIsValid, setFormIsValid] = useState(true);
+  const [formIsValid, setFormIsValid] = useState(false);
   const [errorMessage, setErrorMessage] = useState();
 
   function handleClick() {
@@ -35,19 +36,31 @@ export default function SignUp() {
     setShowAlert(!showAlert);
   };
 
-  const [user, setUser] = useState({
-    url: "",
-    password: "",
-  });
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     // start loading
     setLoading(true);
     try {
-      const response = await axios.get("http://127.0.0.1:5000/generate-pdf");
-      console.log(response);
+      const response = await axios.post(
+        "http://127.0.0.1:8080/generate-pdf",
+        JSON.stringify({ url, type }),
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          responseType: "blob",
+        }
+      );
+      const tempUrl = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = tempUrl;
+      link.setAttribute(
+        "download",
+        type === "pdf" ? "downloaded-file.pdf" : "downloaded-file.png"
+      );
+      document.body.appendChild(link);
+      link.click();
+      window.URL.revokeObjectURL(tempUrl);
       setLoading(false);
     } catch (error) {
       setLoading(false);
@@ -60,33 +73,13 @@ export default function SignUp() {
   };
 
   const handleInputChange = (event) => {
-    const { name, value } = event.target;
-    setUser((prevUser) => ({
-      ...prevUser,
-      [name]: value,
-    }));
+    const { value } = event.target;
+    setUrl(value);
 
-    // form validation
-    if (name === "url") {
-      const isFormValid =
-        value.length >= 3 &&
-        value.includes("@") &&
-        user.password.match(/\d/) !== null &&
-        user.password.match(/[a-zA-Z]/) !== null;
-      setFormIsValid(isFormValid);
-    } else if (name === "password") {
-      const isFormValid =
-        value.length >= 3 &&
-        user.url.includes("@") &&
-        value.match(/\d/) !== null &&
-        value.match(/[a-zA-Z]/) !== null &&
-        value.length >= 8;
-      setFormIsValid(isFormValid);
-    }
-  };
-
-  const handleTogglePassword = () => {
-    setShowPassword((prevShowPassword) => !prevShowPassword);
+    // Regular expression for URL validation
+    const urlRegex = /^(ftp|http|https):\/\/[^ "]+$/;
+    const isUrlValid = urlRegex.test(value);
+    setFormIsValid(isUrlValid);
   };
 
   return (
@@ -108,7 +101,7 @@ export default function SignUp() {
           >
             <Paper>
               <Typography component="h1" variant="h5">
-                login
+                Generate PDF or Image
               </Typography>
               {showAlert && (
                 <CustomAlert
@@ -133,60 +126,41 @@ export default function SignUp() {
                       type="url"
                       id="url"
                       autoComplete="url"
-                      value={user.url}
+                      value={url}
                       onChange={handleInputChange}
-                      error={Boolean(user.url && !user.url.includes("@"))}
+                      error={url && !formIsValid}
                       helperText={
-                        user.url && !user.url.includes("@")
-                          ? "Invalid url address."
-                          : ""
+                        url && !formIsValid ? "Invalid url address." : ""
                       }
                     />
                   </Grid>
                   <Grid item xs={12}>
-                    <TextField
-                      required
-                      fullWidth
-                      name="password"
-                      label="Password"
-                      type={showPassword ? "text" : "password"}
-                      id="password"
-                      autoComplete="new-password"
-                      value={user.password}
-                      onChange={handleInputChange}
-                      error={Boolean(
-                        user.password &&
-                          (user.password.match(/\d/) === null ||
-                            user.password.match(/[a-zA-Z]/) === null ||
-                            user.password.length < 8)
-                      )}
-                      helperText={
-                        user.password &&
-                        (user.password.match(/\d/) === null ||
-                          user.password.match(/[a-zA-Z]/) === null)
-                          ? "Password must contain at least one digit and one letter."
-                          : user.password.length !== 0 &&
-                            user.password.length < 8
-                          ? "Password must be at least 8 characters"
-                          : ""
-                      }
-                      InputProps={{
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <IconButton
-                              onClick={handleTogglePassword}
-                              edge="end"
-                            >
-                              {showPassword ? (
-                                <VisibilityOff />
-                              ) : (
-                                <Visibility />
-                              )}
-                            </IconButton>
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
+                    <FormControl>
+                      <FormLabel id="demo-form-control-label-placement">
+                        Select Type
+                      </FormLabel>
+                      <RadioGroup
+                        row
+                        aria-labelledby="demo-form-control-label-placement"
+                        name="position"
+                        defaultValue="top"
+                        value={type}
+                        onChange={(event) => setType(event.target.value)}
+                      >
+                        <FormControlLabel
+                          value="pdf"
+                          control={<Radio />}
+                          label="PDF"
+                          labelPlacement="bottom"
+                        />
+                        <FormControlLabel
+                          value="image"
+                          control={<Radio />}
+                          label="IMAGE"
+                          labelPlacement="bottom"
+                        />
+                      </RadioGroup>
+                    </FormControl>
                   </Grid>
                 </Grid>
                 {loading ? (
@@ -207,17 +181,11 @@ export default function SignUp() {
                     fullWidth
                     variant="contained"
                     sx={{ mt: 3, mb: 2 }}
+                    disabled={!formIsValid}
                   >
-                    Sign In
+                    Generate
                   </Button>
                 )}
-                <Grid container justifyContent="flex-end">
-                  <Grid item>
-                    <Link to="/signup" variant="body2">
-                      Don't have an account? Sign up
-                    </Link>
-                  </Grid>
-                </Grid>
               </Box>
             </Paper>
           </Box>
