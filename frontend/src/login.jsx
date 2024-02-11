@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Button from "@mui/material/Button";
 import CssBaseline from "@mui/material/CssBaseline";
 import TextField from "@mui/material/TextField";
@@ -16,6 +16,7 @@ import RadioGroup from "@mui/material/RadioGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormControl from "@mui/material/FormControl";
 import FormLabel from "@mui/material/FormLabel";
+import { getVisitorIdSync } from "fineprint";
 
 const defaultTheme = createTheme();
 
@@ -27,6 +28,7 @@ export default function SignUp() {
   const [alertType, setAlertType] = useState();
   const [formIsValid, setFormIsValid] = useState(false);
   const [errorMessage, setErrorMessage] = useState();
+  const [visitorId, setVisitorId] = useState("");
 
   function handleClick() {
     setLoading(!loading);
@@ -36,14 +38,24 @@ export default function SignUp() {
     setShowAlert(!showAlert);
   };
 
+  useEffect(() => {
+    const getId = () => {
+      (async () => {
+        const visitorId = await getVisitorIdSync();
+        setVisitorId(visitorId);
+      })();
+    };
+    getId();
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     // start loading
     setLoading(true);
     try {
       const response = await axios.post(
-        "http://127.0.0.1:8080/generate-pdf",
-        JSON.stringify({ url, type }),
+        "/generate-pdf",
+        JSON.stringify({ url, type, visitorId }),
         {
           headers: {
             "Content-Type": "application/json",
@@ -64,9 +76,7 @@ export default function SignUp() {
       setLoading(false);
     } catch (error) {
       setLoading(false);
-      setErrorMessage(
-        error?.response?.data?.message || error.message || "No Server Response"
-      );
+      setErrorMessage("You have tried tree times");
       setShowAlert(true);
       return setAlertType("error");
     }
