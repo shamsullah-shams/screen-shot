@@ -83,10 +83,9 @@ app.post("/generate-pdf", async (req, res) => {
 });
 
 mongoose.connect(
-  "mongodb://127.0.0.1:27017/shot",
+  process.env.MONGO_URL,
   { useCreateIndex: true, useNewUrlParser: true, useUnifiedTopology: true },
-  (error) => {
-    console.log({ error });
+  () => {
     app.listen(PORT);
   }
 );
