@@ -3,9 +3,9 @@ import "./index.css";
 import Paper from "@mui/material/Paper";
 
 const CustomPaper = (props) => (
-  <Paper elevation={3} className="verification-form">
+  <div elevation={3} className="verification-form">
     {props.children}
-  </Paper>
+  </div>
 );
 
 export default CustomPaper;

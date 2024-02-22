@@ -6,7 +6,11 @@ import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
+import {
+  createMuiTheme,
+  createTheme,
+  ThemeProvider,
+} from "@mui/material/styles";
 import CustomAlert from "./components/Alert";
 import LoadingButton from "@mui/lab/LoadingButton";
 import Paper from "./components/Paper";
@@ -19,6 +23,14 @@ import FormLabel from "@mui/material/FormLabel";
 import { getVisitorIdSync } from "fineprint";
 
 const defaultTheme = createTheme();
+
+const theme = createMuiTheme({
+  palette: {
+    primary: {
+      main: "#ffffff",
+    },
+  },
+});
 
 export default function SignUp() {
   const [showAlert, setShowAlert] = useState(false);
@@ -63,20 +75,31 @@ export default function SignUp() {
           responseType: "blob",
         }
       );
-      const tempUrl = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = tempUrl;
-      link.setAttribute(
-        "download",
-        type === "pdf" ? "downloaded-file.pdf" : "downloaded-file.png"
-      );
-      document.body.appendChild(link);
-      link.click();
-      window.URL.revokeObjectURL(tempUrl);
-      setLoading(false);
+      if (response.status === 200) {
+        const tempUrl = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = tempUrl;
+        link.setAttribute(
+          "download",
+          type === "pdf" ? "downloaded-file.pdf" : "downloaded-file.png"
+        );
+        document.body.appendChild(link);
+        link.click();
+        window.URL.revokeObjectURL(tempUrl);
+        setLoading(false);
+      } else {
+        setLoading(false);
+        setErrorMessage(response.data.message || "Something went wrong");
+        setShowAlert(true);
+        return setAlertType("error");
+      }
     } catch (error) {
       setLoading(false);
-      setErrorMessage("You have tried tree times");
+      setErrorMessage(
+        error.response.status === 402
+          ? "You have tried tree times"
+          : "something went wrong"
+      );
       setShowAlert(true);
       return setAlertType("error");
     }
@@ -110,9 +133,7 @@ export default function SignUp() {
             }}
           >
             <Paper>
-              <Typography component="h1" variant="h5">
-                Generate PDF or Image
-              </Typography>
+              <h1>Generate PDF or Image</h1>
               {showAlert && (
                 <CustomAlert
                   message={errorMessage}
@@ -128,48 +149,67 @@ export default function SignUp() {
               >
                 <Grid container spacing={2}>
                   <Grid item xs={12}>
-                    <TextField
-                      required
-                      fullWidth
-                      name="url"
-                      label="url"
-                      type="url"
-                      id="url"
-                      autoComplete="url"
-                      value={url}
-                      onChange={handleInputChange}
-                      error={url && !formIsValid}
-                      helperText={
-                        url && !formIsValid ? "Invalid url address." : ""
-                      }
-                    />
+                    <ThemeProvider theme={theme}>
+                      <TextField
+                        required
+                        fullWidth
+                        name="url"
+                        label="url"
+                        type="url"
+                        id="url"
+                        autoComplete="url"
+                        value={url}
+                        onChange={handleInputChange}
+                        error={url && !formIsValid}
+                        helperText={
+                          url && !formIsValid ? "Invalid url address." : ""
+                        }
+                        InputLabelProps={{
+                          style: { color: "white", borderColor: "white" }, // Changes label color to white
+                        }}
+                        InputProps={{
+                          style: { color: "white", borderColor: "white" }, // Changes input color and outline color to white
+                        }}
+                      />
+                    </ThemeProvider>
                   </Grid>
                   <Grid item xs={12}>
                     <FormControl>
-                      <FormLabel id="demo-form-control-label-placement">
-                        Select Type
-                      </FormLabel>
-                      <RadioGroup
-                        row
-                        aria-labelledby="demo-form-control-label-placement"
-                        name="position"
-                        defaultValue="top"
-                        value={type}
-                        onChange={(event) => setType(event.target.value)}
-                      >
-                        <FormControlLabel
-                          value="pdf"
-                          control={<Radio />}
-                          label="PDF"
-                          labelPlacement="bottom"
-                        />
-                        <FormControlLabel
-                          value="image"
-                          control={<Radio />}
-                          label="IMAGE"
-                          labelPlacement="bottom"
-                        />
-                      </RadioGroup>
+                      <ThemeProvider theme={theme}>
+                        <FormLabel
+                          id="demo-form-control-label-placement"
+                          style={{ color: "white" }}
+                        >
+                          Select Type
+                        </FormLabel>
+                        <RadioGroup
+                          row
+                          aria-labelledby="demo-form-control-label-placement"
+                          name="position"
+                          defaultValue="top"
+                          value={type}
+                          onChange={(event) => setType(event.target.value)}
+                        >
+                          <ThemeProvider theme={theme}>
+                            <FormControlLabel
+                              value="pdf"
+                              control={<Radio />}
+                              label="PDF"
+                              labelPlacement="bottom"
+                              style={{ color: "white" }}
+                            />
+                          </ThemeProvider>
+                          <ThemeProvider theme={theme}>
+                            <FormControlLabel
+                              value="image"
+                              control={<Radio />}
+                              label="IMAGE"
+                              labelPlacement="bottom"
+                              style={{ color: "white" }}
+                            />
+                          </ThemeProvider>
+                        </RadioGroup>
+                      </ThemeProvider>
                     </FormControl>
                   </Grid>
                 </Grid>
@@ -189,9 +229,10 @@ export default function SignUp() {
                   <Button
                     type="submit"
                     fullWidth
-                    variant="contained"
+                    variant="outlined"
                     sx={{ mt: 3, mb: 2 }}
                     disabled={!formIsValid}
+                    style={{ color: "white", borderColor: "white" }}
                   >
                     Generate
                   </Button>

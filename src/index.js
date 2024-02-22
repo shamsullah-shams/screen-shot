@@ -18,14 +18,6 @@ app.use(express.json());
 // parse urlencoded request body
 app.use(express.urlencoded({ extended: true }));
 
-// static routes
-app.use(express.static(path.join(__dirname, "public", "build")));
-
-// root route
-app.use("/", (req, res, next) => {
-  res.sendFile(path.join(__dirname, "public", "build", "index.html"));
-});
-
 app.post("/generate-pdf", async (req, res) => {
   const url = req.body.url;
   const type = req.body.type;
@@ -42,7 +34,7 @@ app.post("/generate-pdf", async (req, res) => {
   try {
     const result = await Model.findOne({ visitorId });
     if (result && result.option >= 3) {
-      return res.status(400).send({ message: "You have tried 3 times" });
+      return res.status(402).send({ message: "You have tried 3 times" });
     } else if (result) {
       result.option = result.option + 1;
       await result.save();
@@ -89,6 +81,14 @@ app.post("/generate-pdf", async (req, res) => {
     // download pdf
     res.download("result.pdf");
   }
+});
+
+// static routes
+app.use(express.static(path.join(__dirname, "public", "build")));
+
+// root route
+app.use("/", (req, res, next) => {
+  res.sendFile(path.join(__dirname, "public", "build", "index.html"));
 });
 
 mongoose.connect(
