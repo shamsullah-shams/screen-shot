@@ -59,10 +59,6 @@ app.post("/generate-pdf", async (req, res) => {
       path: "screenshot.jpg",
     });
 
-    // delete file
-    setTimeout(() => {
-      fs.unlinkSync("screenshot.jpg");
-    }, 2000);
     // download screen shot
     res.download("screenshot.jpg");
   } else if (type === "pdf") {
@@ -74,10 +70,6 @@ app.post("/generate-pdf", async (req, res) => {
       format: "A3",
     });
 
-    // delete file
-    setTimeout(() => {
-      fs.unlinkSync("result.pdf");
-    }, 2000);
     // download pdf
     res.download("result.pdf");
   }
